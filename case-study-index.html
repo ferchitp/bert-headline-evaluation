@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Can BERT keep up with the news? · Cinthia Terceros</title>
+<meta name="description" content="A chronological evaluation of BERT on hyperpartisan news headlines, with results and error analysis.">
+<style>
+:root{color-scheme:dark;--bg:#19121b;--panel:#261b28;--line:#50374b;--ink:#fff3f6;--quiet:#ddc5d1;--gold:#ffe291;--rose:#ef9cb8}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.6 system-ui,sans-serif}a{color:var(--gold)}a:focus-visible,summary:focus-visible{outline:2px solid var(--gold);outline-offset:4px}
+header,main,footer{width:min(100% - 36px,980px);margin:auto}header{padding:20px 0;border-bottom:1px solid var(--line);display:flex;flex-wrap:wrap;gap:6px 22px;justify-content:space-between}header a{text-decoration:none}header span,.eyebrow,.metric-note{color:var(--quiet);font:14px/1.5 ui-monospace,monospace}
+.hero{padding:clamp(42px,8vw,84px) 0 38px}h1,h2{font-family:Georgia,serif;line-height:1.08;margin:0 0 14px}h1{font-size:clamp(42px,8vw,82px);letter-spacing:-.045em;max-width:760px}h2{font-size:clamp(29px,4vw,42px)}h3{font-size:18px;margin:0 0 8px}p{margin:0 0 12px}p:last-child{margin-bottom:0}.lead{max-width:690px;font-size:clamp(18px,2.6vw,23px);color:var(--quiet)}.eyebrow{margin-bottom:12px;color:var(--rose)}
+.results,.split{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}.panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:20px}.metric{display:block;font:clamp(32px,6vw,52px)/1.1 Georgia,serif;color:var(--gold);margin:8px 0}.section{padding:36px 0;border-bottom:1px solid var(--line)}.note{color:var(--quiet);margin-top:14px}.matrix{width:100%;table-layout:fixed;overflow-wrap:anywhere;border-collapse:collapse;font-variant-numeric:tabular-nums}.matrix caption{text-align:left;font-weight:650;margin-bottom:8px}.matrix th,.matrix td{padding:8px 4px;text-align:right;border-bottom:1px solid var(--line);font-size:14px}.matrix th:first-child{text-align:left}.matrix td.miss{color:var(--gold);font-weight:700}.matrix thead th{color:var(--quiet)}
+details{padding:14px 0;border-bottom:1px solid var(--line)}summary{color:var(--gold);cursor:pointer}details p{margin:10px 0 0}.method{display:grid;gap:10px;padding-left:22px;margin-bottom:0}footer{padding:20px 0 32px;color:var(--quiet)}@media(max-width:610px){.results,.split{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<header><a href="https://ferchitp.github.io/">Cinthia Terceros</a><span>Virginia Tech · CS 4804</span></header>
+<main>
+<section class="hero" aria-labelledby="title">
+<p class="eyebrow">NLP CASE STUDY / CHRONOLOGICAL EVALUATION</p>
+<h1 id="title">Can BERT keep up with the news?</h1>
+<p class="lead">I fine-tuned BERT on headlines from 2014–2016. Across two later test periods, accuracy slipped by about 2 points, while recall for hyperpartisan headlines fell by about 15.</p>
+</section>
+<section aria-label="Performance across test periods">
+<div class="results">
+<div class="panel"><h3>2017–2020 · 1,018 headlines</h3><strong class="metric">73.8%</strong><p>Hyperpartisan recall</p><p class="metric-note">75.9% accuracy · 75.8% macro F1</p></div>
+<div class="panel"><h3>2021–2022 · 447 headlines</h3><strong class="metric">58.5%</strong><p>Hyperpartisan recall</p><p class="metric-note">73.8% accuracy · 71.9% macro F1</p></div>
+</div>
+<p class="note">Recall measures how many dataset-labeled hyperpartisan headlines the model caught. Macro F1 weights both classes equally.</p>
+</section>
+<section class="section" aria-labelledby="errors">
+<h2 id="errors">Where the model missed</h2>
+<div class="split">
+<div class="panel"><table class="matrix"><caption>2017–2020 predictions</caption><thead><tr><th scope="col">Actual label</th><th scope="col">Predicted non-hyperpartisan</th><th scope="col">Predicted hyperpartisan</th></tr></thead><tbody><tr><th scope="row">Non-hyperpartisan</th><td>424</td><td>121</td></tr><tr><th scope="row">Hyperpartisan</th><td class="miss">124</td><td>349</td></tr></tbody></table></div>
+<div class="panel"><table class="matrix"><caption>2021–2022 predictions</caption><thead><tr><th scope="col">Actual label</th><th scope="col">Predicted non-hyperpartisan</th><th scope="col">Predicted hyperpartisan</th></tr></thead><tbody><tr><th scope="row">Non-hyperpartisan</th><td>223</td><td>41</td></tr><tr><th scope="row">Hyperpartisan</th><td class="miss">76</td><td>107</td></tr></tbody></table></div>
+</div>
+<p class="note">The model missed 124 of 473 hyperpartisan headlines in the first test and 76 of 183 in the second. The count fell because the second set was smaller, but the miss rate rose from 26.2% to 41.5%.</p>
+<details><summary>Inspect a missed headline · 2021–2022</summary><p>“Biden Is the Big Spender America Wants” was labeled hyperpartisan in the dataset. BERT predicted non-hyperpartisan.</p></details>
+<details><summary>Inspect an incorrectly flagged headline · 2017–2020</summary><p>“Trump in private: what really happens” was labeled non-hyperpartisan in the dataset. BERT predicted hyperpartisan.</p></details>
+</section>
+<section class="section" aria-labelledby="method">
+<h2 id="method">How I tested it</h2>
+<ol class="method">
+<li>Combined the two manually labeled source files and created a new chronological split. After removing two missing titles and two rows with conflicting labels for the same headline, 2,196 records remained.</li>
+<li>Fine-tuned <code>bert-base-uncased</code> on 584 headlines and selected the checkpoint by macro F1 on a stratified validation set of 147 headlines. Both splits came from 2014–2016.</li>
+<li>Evaluated the selected checkpoint on both later periods. An exact-title check found no overlap between the early splits and either test set, and one shared title between the two test sets.</li>
+</ol>
+</section>
+<section class="section" aria-labelledby="limits">
+<h2 id="limits">What I’d test next</h2>
+<p>The positive-label share fell from 46.5% to 40.9% across test sets. This run measures a performance change across periods, and the difference may reflect changes in topics, publishers, or label mix. It uses a single training run.</p>
+<p>I’d compare BERT with TF-IDF plus logistic regression on the same splits, then check whether the recall gap persists across publishers and training seeds.</p>
+</section>
+</main>
+<footer>Dataset · <a href="https://github.com/VIStA-H/Hyperpartisan-News-Titles">Computational Assessment of Hyperpartisanship in News Titles</a> · Lyu et al., ICWSM 2024</footer>
+</body>
+</html>
