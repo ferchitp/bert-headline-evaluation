@@ -1,18 +1,26 @@
 # Can BERT keep up with the news?
 
-A Virginia Tech CS 4804 case study by Cinthia Terceros. I fine-tuned BERT to classify hyperpartisan news headlines, then measured how its performance changed on headlines from two later periods.
+**Cinthia Terceros · Virginia Tech CS 4804**
 
-Hyperpartisan recall fell from **73.8%** in 2017–2020 to **58.5%** in 2021–2022. Over the same comparison, accuracy moved from **75.9%** to **73.8%**.
+[Live case study](https://ferchitp.github.io/bert-headline-evaluation/) · [Python training and evaluation notebook](bert_headline_evaluation.ipynb) · [Recall calculation](evaluate_recall.py)
 
-## What I used
+I fine-tuned BERT to identify hyperpartisan news headlines from their titles. To see how the model held up over time, I trained on 2014–2016 headlines and evaluated the selected checkpoint on two later periods.
 
-- **Python and Jupyter** for model training and evaluation
-- **PyTorch and Hugging Face Transformers** for fine-tuning BERT
-- **scikit-learn** for splitting the data and calculating metrics
-- **HTML and CSS** for presenting the case study
+**Hyperpartisan recall dropped 15.3 percentage points.** Overall accuracy fell 2.1 points, so accuracy alone understated the drop in how often the model caught hyperpartisan headlines.
 
-Open [the case study](index.html) in a browser to see the experiment design, confusion matrices, and examples of errors. The case-study page was drafted with Codex from my notebook's saved results.
+| Test period | Headlines | Accuracy | Macro F1 | Hyperpartisan recall |
+| --- | ---: | ---: | ---: | ---: |
+| 2017–2020 | 1,018 | 75.9% | 75.8% | 73.8% |
+| 2021–2022 | 447 | 73.8% | 71.9% | 58.5% |
+
+## Explore the experiment
+
+- **Notebook.** Python, pandas, PyTorch, Hugging Face Transformers, and scikit-learn. It covers data cleanup, chronological splitting, fine-tuning, checkpoint selection, and evaluation. The notebook has setup instructions for a GPU-enabled Colab session.
+- **Recall script.** Run `python3 evaluate_recall.py` to reproduce the reported recall comparison from the saved confusion counts.
+- **Case study.** Compare the confusion matrices and inspect two misclassified headlines. The HTML/CSS case-study page was drafted with Codex using my notebook’s saved results.
+
+The two test periods differ in their sample sizes and label mix. The observed gap comes from one trained checkpoint. A follow-up would compare BERT with TF-IDF and logistic regression on the same splits.
 
 ## Dataset
 
-[Computational Assessment of Hyperpartisanship in News Titles](https://github.com/VIStA-H/Hyperpartisan-News-Titles), Lyu et al., ICWSM 2024. I combined the two manually labeled files and created a new chronological split for this experiment.
+[Computational Assessment of Hyperpartisanship in News Titles](https://github.com/VIStA-H/Hyperpartisan-News-Titles), Lyu et al., ICWSM 2024. I combined the two manually labeled source files and created a new chronological split.
